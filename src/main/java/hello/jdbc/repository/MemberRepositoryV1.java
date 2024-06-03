@@ -1,6 +1,6 @@
 package hello.jdbc.repository;
 
-import static hello.jdbc.connection.DBConnectionUtil.*;
+import org.springframework.jdbc.support.JdbcUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -9,15 +9,27 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.NoSuchElementException;
 
+import javax.sql.DataSource;
+
 import hello.jdbc.connection.DBConnectionUtil;
 import hello.jdbc.domain.Member;
 import lombok.extern.slf4j.Slf4j;
 
+/*
+* JDBC - DataSource 사용, JdbcUtils 사용
+* */
+
 @Slf4j
-public class MemberRepositoryV0 {
+public class MemberRepositoryV1 {
+
+    private final DataSource dataSource;
+
+    public MemberRepositoryV1(final DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     public Member save(Member member) throws SQLException {
-        String sql = "insert into member(member_id,money) values (?, ?)";
+        String sql = "insert into member(member_id, money) values (?, ?)";
 
         Connection con = null;
         PreparedStatement pstmt = null;
@@ -102,32 +114,15 @@ public class MemberRepositoryV0 {
 
     private void close(Connection con, Statement stmt, ResultSet rs) {
 
-        if (rs != null) {
-            try {
-                rs.close();
-            } catch (SQLException e) {
-                log.info("error", e);
-            }
-        }
-        // 닫는 순서 조심(외부 리소스를 쓰기 때문에 닫아줘야 함.) stmt -> con
-        if (stmt != null) {
-            try {
-                stmt.close();
-            } catch (SQLException e) {
-                log.info("error", e);
-            }
-        }
+        JdbcUtils.closeResultSet(rs);
+        JdbcUtils.closeStatement(stmt);
+        JdbcUtils.closeConnection(con);
 
-        if (con != null) {
-            try {
-                con.close();
-            } catch (SQLException e) {
-                log.info("error", e);
-            }
-        }
     }
 
-    private Connection getConnection() {
-        return DBConnectionUtil.getConnection();
+    private Connection getConnection() throws SQLException {
+        Connection con = dataSource.getConnection();
+        log.info("get connection={}, class={}", con, con.getClass());
+        return con;
     }
 }
