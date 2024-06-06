@@ -18,7 +18,6 @@ public class MemberServiceV1 {
         memberRepository.update(fromId, fromMember.getMoney()-money);
         validation(toMember);
         memberRepository.update(toId, toMember.getMoney()+money);
-
     }
 
     private void validation(final Member toMember) {
@@ -26,6 +25,4 @@ public class MemberServiceV1 {
             throw new IllegalStateException("이체중 예외 발생");
         }
     }
-
-
 }
